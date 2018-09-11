@@ -1,0 +1,142 @@
+# Note : Got skeleton config with "./bin/rke config" 
+
+# If you intened to deploy Kubernetes in an air-gapped environment,
+# please consult the documentation on how to configure custom RKE images.
+nodes:
+<% HOSTS.each do |hostname, data| %>
+- address: <%= data[0] %>
+  port: "22"
+  internal_address: <%= data[0] %>
+  role:
+<% if data[3] == "master" %>
+  - controlplane
+  - etcd
+<% else %>
+  - worker
+<% end %>
+  hostname_override: <%= hostname %>
+  user: vagrant
+  ssh_key: ""
+  ssh_key_path: .vagrant/machines/<%= hostname %>/virtualbox/private_key
+  labels: {}
+<%end %>
+services:
+  etcd:
+    image: rancher/coreos-etcd:v3.2.18
+    extra_args: {}
+    extra_binds: []
+    external_urls: []
+    ca_cert: ""
+    cert: ""
+    key: ""
+    path: ""
+    snapshot: false
+    retention: ""
+    creation: ""
+  kube-api:
+    image: rancher/hyperkube:v1.11.2-rancher1
+    extra_args: {}
+    extra_binds: []
+    # IP range for any services created on Kubernetes
+    # This must match the service_cluster_ip_range in kube-controller
+    service_cluster_ip_range: 10.53.0.0/16
+    pod_security_policy: false
+  kube-controller:
+    image: rancher/hyperkube:v1.11.2-rancher1
+    extra_args: {}
+    extra_binds: []
+    # CIDR pool used to assign IP addresses to pods in the cluster
+    cluster_cidr: 10.52.0.0/16
+    # IP range for any services created on Kubernetes
+    # This must match the service_cluster_ip_range in kube-api
+    service_cluster_ip_range: 10.53.0.0/16
+  scheduler:
+    image: rancher/hyperkube:v1.11.2-rancher1
+    extra_args: {}
+    extra_binds: []
+  kubelet:
+    image: rancher/hyperkube:v1.11.2-rancher1
+    extra_args: {}
+    # Optionally define additional volume binds to a service
+    extra_binds: []
+    # Base domain for the cluster
+    cluster_domain: rke.k8s.test.local
+    infra_container_image: rancher/pause-amd64:3.1
+    # IP address for the DNS service endpoint
+    cluster_dns_server: 10.53.0.10
+     # Fail if swap is on
+    fail_swap_on: false
+  kubeproxy:
+    image: rancher/hyperkube:v1.11.2-rancher1
+    extra_args: {}
+    extra_binds: []
+network:
+  # plugin: calico # Seems to work, finally ?
+  # plugin: canal
+  # options:
+  #   canal_iface: eth1 # We need calico to go with the second network adapter (thank you Vagrant). KWA FIXME: don't like this arbitrary interface name.
+  #plugin: flannel # Works
+  #options:
+  #  flannel_iface: eth1 # We need flannel to go with the second network adapter (thank you Vagrant). KWA FIXME: don't like this arbitrary interface name.
+  plugin: weave # Works
+authentication:
+  strategy: x509
+  options: {}
+  sans: []
+addons: ""
+#addons_include: []
+addons_include:
+     # Dashboard
+     - https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
+     - k8s-manifests/admin-user.yml
+system_images:
+  etcd: ""
+  alpine: ""
+  nginx_proxy: ""
+  cert_downloader: ""
+  kubernetes_services_sidecar: ""
+  kubedns: ""
+  dnsmasq: ""
+  kubedns_sidecar: ""
+  kubedns_autoscaler: ""
+  kubernetes: ""
+  flannel: ""
+  flannel_cni: ""
+  calico_node: ""
+  calico_cni: ""
+  calico_controllers: ""
+  calico_ctl: ""
+  canal_node: ""
+  canal_cni: ""
+  canal_flannel: ""
+  wave_node: ""
+  weave_cni: ""
+  pod_infra_container: ""
+  ingress: ""
+  ingress_backend: ""
+ssh_key_path: ~/.ssh/id_rsa
+ssh_agent_auth: false
+authorization:
+  mode: rbac
+  options: {}
+ignore_docker_version: false
+#kubernetes_version: ""
+kubernetes_version: "v1.11.2-rancher1-1"
+private_registries: []
+ingress:
+  provider: "nginx"
+  options: {}
+  node_selector: {}
+  extra_args: {}
+cluster_name: "rke-k8s"
+cloud_provider:
+  name: ""
+  cloud_config: {}
+prefix_path: ""
+addon_job_timeout: 180 # Addons need some time to be deployed (until at least the nodes are ready and the deployments are done)
+bastion_host:
+  address: ""
+  port: ""
+  user: ""
+  ssh_key: ""
+  ssh_key_path: ""

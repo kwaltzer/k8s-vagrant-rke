@@ -1,0 +1,6 @@
+bin
+.images/*.tar
+.images/*.tar.gz
+kube_config_cluster.yml
+cluster.yml
+.vagrant

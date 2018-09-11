@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-failure-deployment
+  namespace: default
+  labels:
+    app: test-failure
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-failure
+  template:
+    metadata:
+      labels:
+        app: test-failure
+    spec:
+      containers:
+      - name: test-failure-sleep-then-ok
+        image: busybox
+        command: ["/bin/sh"]
+        args: ["-c", "sleep 60; echo 'My work here is done.'"]
+        imagePullPolicy: IfNotPresent
+      - name: test-failure-sleep-then-ko
+        image: busybox
+        command: ["/bin/sh"]
+        args: ["-c", "sleep 67; echo 'Oops... I failed.'; exit 42"]
+        imagePullPolicy: IfNotPresent
+      - name: test-failure-still-alive
+        image: busybox
+        command: ["/bin/sh"]
+        args: ["-c", "while true; do echo 'The cake is a lie.'; sleep 10; done"]
+        imagePullPolicy: IfNotPresent
+      restartPolicy: Always

@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-configmap-app
+  namespace: default
+  labels:
+    app: test-configmap
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-configmap
+  template:
+    metadata:
+      labels:
+        app: test-configmap
+    spec:
+      containers:
+      - name: busybox-while-true
+        image: busybox
+        command: ["/bin/sh"]
+        args: ["-c", "while true; do echo ${MY_LITTLE_ENV_VARIABLE}; sleep 10;done"]
+        imagePullPolicy: IfNotPresent
+        envFrom:
+         - configMapRef:
+             name: test-configmap-app-config
+      restartPolicy: Always
+      
